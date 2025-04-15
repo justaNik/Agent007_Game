@@ -3,17 +3,19 @@ from typing import Tuple, List, Set, Optional
 
 
 class GameLogic:
-    def __init__(self, size=18, min_mines=10, max_mines=15):
-        self.exploded_mine = None
+    def __init__(self, size=18, min_mines=10, max_mines=15, min_way=1, max_way=6):
         self.size = size
         self.min_mines = min_mines
         self.max_mines = max_mines
+        self.min_way = min_way
+        self.max_way = max_way
+        self.exploded_mine = None
         self.reset_game()
 
     def reset_game(self):
         """Инициализация новой игры"""
-        # Генерация поля с цифрами 1-6
-        self.board = [[random.randint(1, 6) for _ in range(self.size)] for _ in range(self.size)]
+        # перенести цифры 1 и 6 в параметры конструктора
+        self.board = [[random.randint(self.min_way, self.max_way) for _ in range(self.size)] for _ in range(self.size)]
         self.mines = set()
         self.visited = set()  # Посещенные клетки
         self.current_pos = None  # Текущая позиция агента
