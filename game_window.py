@@ -70,7 +70,6 @@ class GameWindow(QMainWindow, Ui_MainWindow):
             for btn in row:
                 btn.setParent(None)
 
-        # создем новые кнопки
         self.init_ui()
         self.update_ui()
         self.resize_cells()
@@ -110,6 +109,8 @@ class GameWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.information(self, "Game Over", "You hit a mine! Game over.")
             elif self.game.win:
                 QMessageBox.information(self, "Congratulations!", "You won! All safe cells visited.")
+            elif self.game.hit_wall:
+                QMessageBox.information(self, "Game Over", "You bumped into a wall! Game over.")
 
     def on_cell_click(self, x, y):
         if self.game.game_over:

@@ -23,12 +23,12 @@ class GameLogic:
         self.win = False
         self.path = []  # Текущий путь хода
         self.score = 0
+        self.hit_wall = False
 
         self.place_mines()
         self.set_start_position()
 
     def place_mines(self):
-        """Расстановка видимых мин на поле"""
         total_mines = random.randint(self.min_mines, self.max_mines)
         while len(self.mines) < total_mines:
             x = random.randint(0, self.size - 1)
@@ -37,7 +37,6 @@ class GameLogic:
             self.board[y][x] = -1  # Обозначаем мину
 
     def set_start_position(self):
-        """Выбор случайной стартовой позиции"""
         while True:
             x = random.randint(0, self.size - 1)
             y = random.randint(0, self.size - 1)
@@ -46,79 +45,47 @@ class GameLogic:
                 self.visited.add((x, y))
                 break
 
-    '''def get_possible_moves(self) -> List[Tuple[int, int]]:
-        """Возвращает список соседних клеток, из которых можно сделать ход"""
-        if not self.current_pos or self.game_over:
-            return []
-
-        x, y = self.current_pos
-        moves = []
-
-        directions = [(-1, -1), (-1, 0), (-1, 1),
-                      (0, -1), (0, 1),
-                      (1, -1), (1, 0), (1, 1)]
-
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-
-            if not (0 <= nx < self.size and 0 <= ny < self.size):
-                continue
-
-            if (nx, ny) in self.visited:
-                continue
-
-            steps = self.board[ny][nx]
-
-            # Проверка — не выйдет ли за границы
-            end_x = x + dx * steps
-            end_y = y + dy * steps
-
-            if not (0 <= end_x < self.size and 0 <= end_y < self.size):
-                continue
-
-            moves.append((nx, ny))
-
-        return moves'''
-
     def make_move(self, new_pos: Tuple[int, int]) -> bool:
-        """Выполнение хода: направление определяется по выбранной соседней клетке,
-        затем идем на число шагов в этом направлении"""
-        '''if self.game_over or new_pos not in self.get_possible_moves():
-            return False'''
         if self.game_over:
             return False
 
+        if not self.current_pos:
+            return False
+
         start_x, start_y = self.current_pos
-        dir_x = new_pos[0] - start_x
-        dir_y = new_pos[1] - start_y
+        x, y = new_pos
 
-        # Направление должно быть -1, 0 или 1
-        dx = 0 if dir_x == 0 else (1 if dir_x > 0 else -1)
-        dy = 0 if dir_y == 0 else (1 if dir_y > 0 else -1)
+        # Ход возможен только на соседнюю клетку
+        if abs(x - start_x) > 1 or abs(y - start_y) > 1 or (x == start_x and y == start_y):
+            return False
 
-        # Число шагов берем из выбранной клетки
-        steps = self.board[new_pos[1]][new_pos[0]]
+        # Определяем направление
+        dx = x - start_x
+        dy = y - start_y
+
+        dx = 0 if dx == 0 else (1 if dx > 0 else -1)
+        dy = 0 if dy == 0 else (1 if dy > 0 else -1)
+
+        steps = self.board[y][x]
         self.path = []
 
         for step in range(1, steps + 1):
-            x = start_x + dx * step
-            y = start_y + dy * step
+            nx = start_x + dx * step
+            ny = start_y + dy * step
 
-            # Проверка выхода за границы
-            if not (0 <= x < self.size and 0 <= y < self.size):
+            if not (0 <= nx < self.size and 0 <= ny < self.size):
+                self.hit_wall = True
                 self.game_over = True
                 return False
 
-            # Проверка на мину
-            if (x, y) in self.mines:
+            if (nx, ny) in self.mines:
                 self.game_over = True
-                self.exploded_mine = (x, y)
+                self.exploded_mine = (nx, ny)
                 return False
 
-            self.path.append((x, y))
-            self.score += self.board[x][y]
+            self.path.append((nx, ny))
+            self.score += self.board[nx][ny]
 
-        # Обновляем состояние
         for cell in self.path:
             self.visited.add(cell)
         self.current_pos = self.path[-1]
@@ -134,9 +101,7 @@ class GameLogic:
         return self.board[y][x]
 
     def is_visited(self, x: int, y: int) -> bool:
-        """Проверяет, посещена ли клетка"""
         return (x, y) in self.visited
 
     def is_mine(self, x: int, y: int) -> bool:
-        """Проверяет, является ли клетка миной"""
         return (x, y) in self.mines
